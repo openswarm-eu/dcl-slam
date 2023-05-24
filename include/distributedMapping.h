@@ -188,10 +188,6 @@ class distributedMapping : public paramsServer
 
 		void publishLoopClosureConstraint();
 
-		bool saveDistributedTrajectoryService(
-			dcl_slam::save_distributed_trajectoryRequest& req,
-			dcl_slam::save_distributed_trajectoryResponse& res);
-
 	public:
 		mutex lock_on_call; // lock on odometry
 
