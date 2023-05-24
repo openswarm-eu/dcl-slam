@@ -21,7 +21,6 @@
 #include "dcl_slam/loop_info.h"
 #include "dcl_slam/global_descriptor.h"
 #include "dcl_slam/neighbor_estimate.h"
-#include "dcl_slam/save_distributed_trajectory.h"
 // pcl
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
