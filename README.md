@@ -58,28 +58,27 @@ The HD video of the demonstration of DCL-SLAM is avaliable at [BiliBili](https:/
   - Other dataset. Please follow [LIO-SAM](https://github.com/TixiaoShan/LIO-SAM) and [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) to set your own config file for the dataset in "config/*your-config-file*.yaml", and change the path in "launch/single_ugv.launch".
 
 ## Citation
-The paper is avaliable at [site](https://arxiv.org/pdf/2210.11978.pdf), and please cite:
+This work is published in IEEE Sensors Journal, and please cite related papers:
 
 ```
-@article{DBLP:journals/corr/abs-2210-11978,
-  author    = {Shipeng Zhong and
-               Yuhua Qi and
-               Zhiqiang Chen and
-               Jin Wu and
-               Hongbo Chen and
-               Ming Liu},
-  title     = {{DCL-SLAM:} {A} Distributed Collaborative LiDAR {SLAM} Framework for
-               a Robotic Swarm},
-  journal   = {CoRR},
-  volume    = {abs/2210.11978},
-  year      = {2022},
-  url       = {https://doi.org/10.48550/arXiv.2210.11978},
-  doi       = {10.48550/arXiv.2210.11978},
-  eprinttype = {arXiv},
-  eprint    = {2210.11978},
-  timestamp = {Tue, 25 Oct 2022 14:25:08 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-2210-11978.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+@ARTICLE{10375928,
+  author={Zhong, Shipeng and Qi, Yuhua and Chen, Zhiqiang and Wu, Jin and Chen, Hongbo and Liu, Ming},
+  journal={IEEE Sensors Journal}, 
+  title={DCL-SLAM: A Distributed Collaborative LiDAR SLAM Framework for a Robotic Swarm}, 
+  year={2024},
+  volume={24},
+  number={4},
+  pages={4786-4797},
+  keywords={Simultaneous localization and mapping;Laser radar;Sensors;Optimization;Feature extraction;Trajectory;Odometry;Collaborative localization;distributed framework;place recognition;range sensor},
+  doi={10.1109/JSEN.2023.3345541}}
+```
+
+```
+@article{feng2022s3e,
+  title={S3e: A large-scale multimodal dataset for collaborative slam},
+  author={Feng, Dapeng and Qi, Yuhua and Zhong, Shipeng and Chen, Zhiqiang and Jiao, Yudu and Chen, Qiming and Jiang, Tao and Chen, Hongbo},
+  journal={arXiv preprint arXiv:2210.13723},
+  year={2022}
 }
 ```
 
