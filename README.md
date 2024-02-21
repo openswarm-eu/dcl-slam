@@ -58,7 +58,7 @@ The HD video of the demonstration of DCL-SLAM is avaliable at [BiliBili](https:/
   - Other dataset. Please follow [LIO-SAM](https://github.com/TixiaoShan/LIO-SAM) and [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) to set your own config file for the dataset in "config/*your-config-file*.yaml", and change the path in "launch/single_ugv.launch".
 
 ## Citation
-This work is published in IEEE Sensors Journal, and please cite related papers:
+This work is published in IEEE Sensors Journal 2023, and please cite related papers:
 
 ```
 @ARTICLE{10375928,
