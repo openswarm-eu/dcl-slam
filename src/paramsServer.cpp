@@ -3,14 +3,35 @@
 paramsServer::paramsServer()
 {
 	// robot info
+	nh.param<bool>("/mapFrameAsChild", mapFrameAsChild, false);
+	nh.param<bool>("/name_list", name_list, false);
+	nh.param<std::vector<std::string>>("/robot_names", robot_names, std::vector<std::string>());
 	std::string ns = nh.getNamespace(); // namespace of robot
-	if(ns.length() != 2)
+
+
+	if(name_list == false)
 	{
-		ROS_ERROR("Invalid robot prefix (should be either 'a-z' or 'A-Z'): %s", ns.c_str());
-		ros::shutdown();
+		if(ns.length() != 2)
+		{
+			ROS_ERROR("Invalid robot prefix (should be either 'a-z' or 'A-Z'): %s", ns.c_str());
+			ros::shutdown();
+		}
+		name_ = ns.substr(1, 1); // remove '/' character
+		id_ = name_[0]-'a'; // id of robot
 	}
-	name_ = ns.substr(1, 1); // romove '/' character
-	id_ = name_[0]-'a'; // id of robot
+	else
+	{
+		name_ = ns.substr(1, 4); // remove '/' character
+		for (size_t i = 0; i < robot_names.size(); ++i)
+		{
+			std::string robot_name_list = robot_names[i].c_str();
+			if (robot_name_list == name_)
+			{
+				id_ = i;
+				ROS_INFO("Name of Robot: %s, Id: %i", robot_name_list.c_str(), id_);
+			}
+		}
+	}
 
 	nh.param<int>("/number_of_robots", number_of_robots_, 1);
 	if(number_of_robots_ < 1)
@@ -190,4 +211,16 @@ pcl::PointCloud<PointPose3D>::Ptr paramsServer::transformPointCloud(pcl::PointCl
 		cloud_out->points[i].intensity = p_from.intensity;
 	}
 	return cloud_out;
+}
+
+int findIndex(std::vector<std::string> vec, std::string value)
+{
+	for (size_t i = 0; i < vec.size(); ++i)
+	{
+		if (vec[i] == value)
+		{
+			return i;
+		}
+	}
+	return -1;
 }

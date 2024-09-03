@@ -12,6 +12,9 @@
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
 
+#include <vector>
+#include <string>
+
 using namespace gtsam;
 using namespace std;
 
@@ -92,6 +95,10 @@ class paramsServer
 			pcl::PointCloud<PointPose3D> cloud_in,
 			gtsam::Pose3 pose);
 
+		int findIndex(
+			std::vector<std::string> vec,
+			std::string value);
+
 	protected:
 		ros::NodeHandle nh;
 
@@ -101,6 +108,11 @@ class paramsServer
 		// robot info
 		std::string name_; // this robot name
 		int id_; // this robot id
+
+		// Add to deal with generic robots
+		bool name_list;
+		std::vector<std::string> robot_names;
+		bool mapFrameAsChild;
 
 		// frames name
 		std::string world_frame_; // global frame

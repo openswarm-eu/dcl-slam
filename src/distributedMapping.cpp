@@ -600,7 +600,10 @@ void distributedMapping::publishTransformation(
 		pose_between.rotation().roll(), pose_between.rotation().pitch(), pose_between.rotation().yaw()),
 		tf::Vector3(pose_between.translation().x(), pose_between.translation().y(), pose_between.translation().z()));
 
-	world_to_odom_tf_broadcaster.sendTransform(tf::StampedTransform(world_to_odom, timestamp, world_frame_, robots[id_].odom_frame_));
+	if(mapFrameAsChild)
+		world_to_odom_tf_broadcaster.sendTransform(tf::StampedTransform(world_to_odom.inverse(), timestamp, robots[id_].odom_frame_, world_frame_));
+	else
+		world_to_odom_tf_broadcaster.sendTransform(tf::StampedTransform(world_to_odom, timestamp, world_frame_, robots[id_].odom_frame_));
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 

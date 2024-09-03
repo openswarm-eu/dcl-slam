@@ -5,21 +5,32 @@
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 distributedMapping::distributedMapping() : paramsServer()
 {
-	string log_name = name_+"_distributed_mapping";
-	google::InitGoogleLogging(log_name.c_str());
-	string log_dir = "/log";
-	FLAGS_log_dir = std::getenv("HOME") + log_dir;
-	LOG(INFO) << "distributed mapping class initialization" << endl;
+	// string log_name = name_+"_distributed_mapping";
+	// google::InitGoogleLogging(log_name.c_str());
+	// string log_dir = "/log";
+	// FLAGS_log_dir = std::getenv("HOME") + log_dir;
+	// LOG(INFO) << "distributed mapping class initialization" << endl;
 
 	/*** robot team ***/
 	singleRobot robot; // each robot
+	ROS_INFO("Number of Robots:  %i", number_of_robots_);
+	// cout << "Number of Robots: " << number_of_robots_ << endl;
 	for(int it = 0; it < number_of_robots_; it++)
 	{
 		/*** robot information ***/
 		robot.id_ = it; // robot ID and name
-		robot.name_ = "/a";
-		robot.name_[1] += it;
+		if(name_list == false)
+		{
+			robot.name_ = "/a";
+			robot.name_[1] += it;
+		}
+		else
+		{
+			std::string robot_name_list = robot_names[it].c_str();
+			robot.name_ = "/" + robot_name_list;
+		}
 		robot.odom_frame_ = robot.name_ + "/" + odom_frame_; // odom frame
+		ROS_INFO("Odom frame: %s, Id: %i", robot.name_.c_str(), id_);
 
 		/*** ros subscriber and publisher ***/
 		// this robot
