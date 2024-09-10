@@ -178,8 +178,7 @@ distributedMapping::distributedMapping() : paramsServer()
 
 	/*** noise model ***/
 	odometry_noise = noiseModel::Diagonal::Variances((Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4).finished());
-	// prior_noise = noiseModel::Isotropic::Variance(6, 1e-12); // original value in DCL-SLAM
-	prior_noise = noiseModel::Diagonal::Variances((Vector(6) << 1e-2, 1e-2, M_PI*M_PI, 1e8, 1e8, 1e8).finished());
+	prior_noise = noiseModel::Isotropic::Variance(6, 1e-12);
 
 	/*** local pose graph optmazition ***/
 	ISAM2Params parameters;

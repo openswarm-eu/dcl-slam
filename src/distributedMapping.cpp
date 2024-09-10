@@ -1486,7 +1486,7 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 			if ((pointDistance(curGPSPoint, lastGPSPoint) < gpsUpatedDistFix) || !initial_gpsUpdate){
 				if(!initial_gpsUpdate){ROS_INFO("GPS factor initial updated (%.2f, %.2f, %.2f), next update will occur every %.2f [m]",curGPSPoint.x,curGPSPoint.y,curGPSPoint.z, gpsUpatedDistFix);}
 				initial_gpsUpdate = true;
-				//continue;
+				continue;
 			} else {
 				lastGPSPoint = curGPSPoint;
 			}
