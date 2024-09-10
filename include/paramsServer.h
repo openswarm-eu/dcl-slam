@@ -11,6 +11,7 @@
 // mapping
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/navigation/GPSFactor.h>
 
 #include <vector>
 #include <string>
@@ -167,6 +168,14 @@ class paramsServer
 		float ransac_outlier_reject_threshold_; // RANSAC outlier rejection distancce
 		int history_keyframe_search_num_; // number of history frames in submap for scan-to-map matching
 		float fitness_score_threshold_; // ICP fitness score threshold
+
+		// GPS Settings
+		double timeLaserInfoCur; // GPS current time
+		bool useImuHeadingInitialization;
+		bool useGpsElevation;
+		float gpsCovThreshold;
+		float poseCovThreshold;
+		float gpsUpatedDistFix;
 
 		// visualization
 		float global_map_visualization_radius_; // radius of radius search based intra-robot loop closure

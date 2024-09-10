@@ -28,6 +28,15 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
+// pcl added
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/search/impl/search.hpp>
+#include <pcl/range_image/range_image.h>
+#include <pcl/common/common.h>
+#include <pcl/common/transforms.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/crop_box.h> 
 // mapping
 #include "distributed_mapper/distributed_mapper.h"
 #include "distributed_mapper/distributed_mapper_utils.h"
@@ -37,6 +46,8 @@
 #include <iostream>
 // log
 #include <glog/logging.h>
+// mathematical operations and transformations
+#include <cmath>
 
 using namespace gtsam;
 using namespace std;
@@ -63,7 +74,8 @@ class distributedMapping : public paramsServer
 		void performDistributedMapping(
 			const Pose3& pose_to,
 			const pcl::PointCloud<PointPose3D>::Ptr frame_to,
-			const ros::Time& timestamp);
+			const ros::Time& timestamp,
+			const std::deque<nav_msgs::Odometry> gpsQueue);
 
 		bool saveFrame(
 			const Pose3& pose_to);
@@ -160,6 +172,15 @@ class distributedMapping : public paramsServer
 			const OptimizerState& state);
 
 		void run(const ros::TimerEvent&);
+
+		void addGPSFactor(
+			const deque<nav_msgs::Odometry> gpsQueue,
+			int poses_num,
+			Symbol current_symbol);
+
+		float pointDistance(PointPose3D p);
+
+		float pointDistance(PointPose3D p1, PointPose3D p2);
 
 		void performRSIntraLoopClosure();
 

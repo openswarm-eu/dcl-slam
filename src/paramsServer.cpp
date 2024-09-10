@@ -123,6 +123,13 @@ paramsServer::paramsServer()
 	nh.param<float>(ns + "/ransac_threshold", ransac_threshold_, 0.5);
 	nh.param<float>(ns + "/ransac_outlier_reject_threshold", ransac_outlier_reject_threshold_, 0.05);
 
+	// GPS Settings
+	nh.param<bool>(ns + "/useImuHeadingInitialization", useImuHeadingInitialization, false);
+	nh.param<bool>(ns + "/useGpsElevation", useGpsElevation, false);
+	nh.param<float>(ns + "/gpsCovThreshold", gpsCovThreshold, 10.0);
+	nh.param<float>(ns + "/poseCovThreshold", poseCovThreshold, 100.0);
+	nh.param<float>(ns + "/gpsUpatedDistFix", gpsUpatedDistFix, -1.0);
+
 	// keyframe params
 	nh.param<float>(ns + "/keyframe_distance_threshold", keyframe_distance_threshold_, 1.0);
 	nh.param<float>(ns + "/keyframe_angle_threshold", keyframe_angle_threshold_, 0.2);

@@ -65,6 +65,11 @@ void distributedMapping::loopInfoHandler(
 		Pose3 pose_between = transformToGtsamPose(msg->pose_between);
 		NonlinearFactor::shared_ptr factor(new BetweenFactor<Pose3>(
 			Symbol('a'+msg->robot0, msg->index0), Symbol('a'+msg->robot1, msg->index1), pose_between, loop_noise));
+		gtsam::Symbol test1('a'+msg->robot0, msg->index0);
+		gtsam::Symbol test2('a'+msg->robot1, msg->index1);
+		LOG(INFO) << "[loopInfoHandler(" << id << ")] symbol factors "
+			<< "Character: " << test1.chr() << ", Index: " << test1.index() << "-"
+			<< "Character: " << test2.chr() << ", Index: " << test2.index() << std::endl;
 		
 		// update adjacency matrix
 		adjacency_matrix(msg->robot0, msg->robot1) += 1;
@@ -567,6 +572,11 @@ void distributedMapping::performExternLoopClosure()
 		Symbol('a'+inter_loop.robot0, inter_loop.index0),
 		Symbol('a'+inter_loop.robot1, inter_loop.index1),
 		pose_between, loop_noise));
+	gtsam::Symbol test1('a'+inter_loop.robot0, inter_loop.index0);
+	gtsam::Symbol test2('a'+inter_loop.robot1, inter_loop.index1);
+	LOG(INFO) << "[InterLoop<" << id_ << ">] add factor " 
+		<< "Character: " << test1.chr() << ", Index: " << test1.index() << "-"
+		<< "Character: " << test2.chr() << ", Index: " << test2.index() << std::endl;
 	adjacency_matrix(inter_loop.robot1, inter_loop.robot0) += 1;
 	adjacency_matrix(inter_loop.robot0, inter_loop.robot1) += 1;
 	local_pose_graph->add(factor);

@@ -324,7 +324,8 @@ void distributedMapping::neighborPoseHandler(
 void distributedMapping::performDistributedMapping(
 	const Pose3& pose_to,
 	const pcl::PointCloud<PointPose3D>::Ptr frame_to,
-	const ros::Time& timestamp)
+	const ros::Time& timestamp,
+	const std::deque<nav_msgs::Odometry> gpsQueue)
 {
 	// save keyframe cloud
 	pcl::copyPointCloud(*frame_to, *robots[id_].keyframe_cloud);
@@ -332,6 +333,7 @@ void distributedMapping::performDistributedMapping(
 	// save timestamp
 	robots[id_].time_cloud_input_stamp = timestamp;
 	robots[id_].time_cloud_input = timestamp.toSec();
+	timeLaserInfoCur = timestamp.toSec();
 
 	// add piror factor
 	Pose3 new_pose_to;
@@ -351,6 +353,8 @@ void distributedMapping::performDistributedMapping(
 		initial_values->insert(current_symbol, pose_to);
 		isam2_initial_values.insert(current_symbol, pose_to);
 		new_pose_to = pose_to;
+
+		addGPSFactor(gpsQueue, poses_num, current_symbol);
 
 		LOG(INFO) << "createPrior:[" << id_ << "]" << new_pose_to.translation().x() << " " << new_pose_to.translation().y()
 			<< " " << new_pose_to.translation().z() << new_pose_to.rotation().roll() << " " << new_pose_to.rotation().pitch()
@@ -383,6 +387,9 @@ void distributedMapping::performDistributedMapping(
 		auto new_factor = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor);
 		robot_local_map.addTransform(*new_factor, covariance);
 
+		// add gps value
+		addGPSFactor(gpsQueue, poses_num, current_symbol);
+
 		LOG(INFO) << "createOdom:[" << id_ << "]" << "[" << poses_num - 1 << "-" << poses_num << "]--["
 			<< pose_from.translation().x() << " " << pose_from.translation().y() << " " << pose_from.translation().z()
 			<< pose_from.rotation().roll() << " " << pose_from.rotation().pitch() << " " << pose_from.rotation().yaw() << "],["
@@ -391,8 +398,9 @@ void distributedMapping::performDistributedMapping(
 	}
 
 	// optimizing
-	// isam2_graph.print("GTSAM Graph:\n");
+	isam2_graph.print("GTSAM Graph:\n");
 	isam2->update(isam2_graph, isam2_initial_values);
+	isam2->update(); 	// add for gps factor
 	isam2_graph.resize(0);
 	isam2_initial_values.clear();
 	isam2_current_estimates = isam2->calculateEstimate();
@@ -1383,4 +1391,130 @@ void distributedMapping::run(
 			optimization_steps++;
 			break;
 	}
+}
+
+void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, int poses_num, Symbol current_symbol)
+{
+
+	
+	if (gpsQueue.empty())
+	{
+		ROS_WARN("gpsFixTopic is empty");
+		return;
+	}
+	
+	// wait for system initialized and settles down
+	if (poses_num == 0)
+	{
+		ROS_WARN("cloudKeyPoses3D wait for system initialized and settles down");
+		return;
+	}            
+	else
+	{   
+		static PointPose3D pose_front_3d = keyposes_cloud_3d->front();
+		static PointPose3D pose_back_3d = keyposes_cloud_3d->back();
+		static bool initial_cloudkeyUpdate = false; // force initial update
+		if(!initial_cloudkeyUpdate)
+		{
+			initial_cloudkeyUpdate =true;
+			ROS_WARN("GPS initialized.");
+		}
+		else if(pointDistance(pose_front_3d, pose_back_3d) < gpsUpatedDistFix)
+		{
+			return;
+		}
+	}
+
+	// // pose covariance small, no need to correct
+	// if (poseCovariance(3,3) < poseCovThreshold && poseCovariance(4,4) < poseCovThreshold)
+	// 	return;
+
+	// last gps position
+	static PointPose3D lastGPSPoint;
+
+	while (!gpsQueue.empty())
+	{
+
+		if (gpsQueue.front().header.stamp.toSec() < timeLaserInfoCur - 0.2)
+		{
+			// message too old
+			gpsQueue.pop_front();
+
+		}
+		else if (gpsQueue.front().header.stamp.toSec() > timeLaserInfoCur + 0.2)
+		{
+			// message too new
+			break;
+		}
+		else
+		{
+
+			nav_msgs::Odometry thisGPS = gpsQueue.front();
+			gpsQueue.pop_front();
+
+			// GPS too noisy, skip
+			float noise_x = thisGPS.pose.covariance[0];
+			float noise_y = thisGPS.pose.covariance[7];
+			float noise_z = thisGPS.pose.covariance[14];
+			if (noise_x > gpsCovThreshold || noise_y > gpsCovThreshold){
+				ROS_WARN("GPS too noisy, skip! Current covariance noise value (%.2f, %.2f,%.2f)",noise_x,noise_y,noise_z);
+				continue;
+			}
+
+			float gps_x = thisGPS.pose.pose.position.x;
+			float gps_y = thisGPS.pose.pose.position.y;
+			float gps_z = thisGPS.pose.pose.position.z;
+			// if (!useGpsElevation)
+			// {
+			// 	gps_z = transformTobeMapped[5];
+			// 	noise_z = 0.01;
+			// }
+
+			// // GPS not properly initialized (0,0,0)
+			// if (abs(gps_x) < 1e-6 && abs(gps_y) < 1e-6){
+			// 	ROS_WARN("GPS not properly initialized! Current GPS value (%.2f, %.2f,%.2f)",gps_x,gps_y,gps_z);
+			// 	continue;
+			// }
+
+			// Add GPS every a few meters
+			PointPose3D curGPSPoint;
+			curGPSPoint.x = gps_x;
+			curGPSPoint.y = gps_y;
+			curGPSPoint.z = gps_z;
+
+			static bool initial_gpsUpdate = false;  // force initial update
+			if ((pointDistance(curGPSPoint, lastGPSPoint) < gpsUpatedDistFix) || !initial_gpsUpdate){
+				if(!initial_gpsUpdate){ROS_INFO("GPS factor initial updated (%.2f, %.2f, %.2f), next update will occur every %.2f [m]",curGPSPoint.x,curGPSPoint.y,curGPSPoint.z, gpsUpatedDistFix);}
+				initial_gpsUpdate = true;
+				//continue;
+			} else {
+				lastGPSPoint = curGPSPoint;
+			}
+
+			gtsam::Vector Vector3(3);
+			Vector3 << max(noise_x, 1.0f), max(noise_y, 1.0f), max(noise_z, 1.0f);
+			noiseModel::Diagonal::shared_ptr gps_noise = noiseModel::Diagonal::Variances(Vector3);
+			gtsam::GPSFactor gps_factor(current_symbol, gtsam::Point3(gps_x, gps_y, gps_z), gps_noise);
+			LOG(INFO) << "GPS add factor:[" << id_ << "]" << "[" << gps_x << " " << gps_y << " " << gps_z << "]" 
+			<< " " << current_symbol.chr() << current_symbol.index()<< " " << endl;
+			// gtSAMgraph.add(gps_factor);
+
+			local_pose_graph->add(gps_factor);
+			local_pose_graph_no_filtering->add(gps_factor);
+			isam2_graph.add(gps_factor);
+
+			// aLoopIsClosed = true;
+			break;
+		}
+	}
+}
+
+float distributedMapping::pointDistance(PointPose3D p)
+{
+    return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+}
+
+float distributedMapping::pointDistance(PointPose3D p1, PointPose3D p2)
+{
+    return sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z));
 }
