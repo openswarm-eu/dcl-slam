@@ -170,6 +170,7 @@ class paramsServer
 		float fitness_score_threshold_; // ICP fitness score threshold
 
 		// GPS Settings
+		bool addGPSFactorflag;
 		double timeLaserInfoCur; // GPS current time
 		bool useImuHeadingInitialization;
 		bool useGpsElevation;

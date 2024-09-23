@@ -124,6 +124,7 @@ paramsServer::paramsServer()
 	nh.param<float>(ns + "/ransac_outlier_reject_threshold", ransac_outlier_reject_threshold_, 0.05);
 
 	// GPS Settings
+	nh.param<bool>(ns + "/addGPSFactorflag", addGPSFactorflag, false);
 	nh.param<bool>(ns + "/useImuHeadingInitialization", useImuHeadingInitialization, false);
 	nh.param<bool>(ns + "/useGpsElevation", useGpsElevation, false);
 	nh.param<float>(ns + "/gpsCovThreshold", gpsCovThreshold, 10.0);

@@ -354,7 +354,6 @@ void distributedMapping::performDistributedMapping(
 		isam2_initial_values.insert(current_symbol, pose_to);
 		new_pose_to = pose_to;
 
-		addGPSFactor(gpsQueue, poses_num, current_symbol);
 
 		LOG(INFO) << "createPrior:[" << id_ << "]" << new_pose_to.translation().x() << " " << new_pose_to.translation().y()
 			<< " " << new_pose_to.translation().z() << new_pose_to.rotation().roll() << " " << new_pose_to.rotation().pitch()
@@ -388,7 +387,8 @@ void distributedMapping::performDistributedMapping(
 		robot_local_map.addTransform(*new_factor, covariance);
 
 		// add gps value
-		addGPSFactor(gpsQueue, poses_num, current_symbol);
+		if (addGPSFactorflag == true)
+			addGPSFactor(gpsQueue, poses_num, current_symbol);
 
 		LOG(INFO) << "createOdom:[" << id_ << "]" << "[" << poses_num - 1 << "-" << poses_num << "]--["
 			<< pose_from.translation().x() << " " << pose_from.translation().y() << " " << pose_from.translation().z()
