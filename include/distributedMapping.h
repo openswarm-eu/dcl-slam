@@ -96,6 +96,8 @@ class distributedMapping : public paramsServer
 
 		void globalMapThread();
 
+		sensor_msgs::PointCloud2 globalMapService();
+
 	private:
 		void poseCovariance2msg(
 			const graph_utils::PoseWithCovariance& pose,

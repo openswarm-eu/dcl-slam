@@ -146,3 +146,65 @@ void distributedMapping::publishLoopClosureConstraint()
 	markers_array.markers.push_back(constraints);
 	pub_loop_closure_constraints.publish(markers_array);
 }
+
+sensor_msgs::PointCloud2 distributedMapping::globalMapService()
+{
+	// copy the poses and change to cloud type
+	Values poses_initial_guess_copy = *initial_values;
+	pcl::PointCloud<PointPose3D>::Ptr poses_3d_cloud_copy(new pcl::PointCloud<PointPose3D>());
+	pcl::PointCloud<PointPose6D>::Ptr poses_6d_cloud_copy(new pcl::PointCloud<PointPose6D>());
+	for(const Values::ConstKeyValuePair &key_value: poses_initial_guess_copy)
+	{
+		Symbol key = key_value.key;
+		Pose3 pose = poses_initial_guess_copy.at<Pose3>(key);
+
+		PointPose3D pose_3d;
+		pose_3d.x = pose.translation().x();
+		pose_3d.y = pose.translation().y();
+		pose_3d.z = pose.translation().z();
+		pose_3d.intensity = key.index();
+
+		PointPose6D pose_6d;
+		pose_6d.x = pose_3d.x;
+		pose_6d.y = pose_3d.y;
+		pose_6d.z = pose_3d.z;
+		pose_6d.intensity = pose_3d.intensity;
+		pose_6d.roll = pose.rotation().roll();
+		pose_6d.pitch = pose.rotation().pitch();
+		pose_6d.yaw = pose.rotation().yaw();
+
+		poses_3d_cloud_copy->push_back(pose_3d);
+		poses_6d_cloud_copy->push_back(pose_6d);
+	}
+
+	// find the closest history key frame
+	std::vector<int> indices;
+	std::vector<float> distances;
+	kdtree_history_keyposes->setInputCloud(poses_3d_cloud_copy);
+	kdtree_history_keyposes->radiusSearch(poses_3d_cloud_copy->back(),
+		global_map_visualization_radius_, indices, distances, 0);
+
+	// extract visualized key frames
+	pcl::PointCloud<PointPose3D>::Ptr global_map_keyframes(new pcl::PointCloud<PointPose3D>());
+	pcl::PointCloud<PointPose3D>::Ptr global_map_keyframes_ds(new pcl::PointCloud<PointPose3D>());
+	for (int i = 0; i < (int)indices.size(); ++i)
+	{
+		PointPose6D pose_6d_tmp = poses_6d_cloud_copy->points[indices[i]];
+		*global_map_keyframes += *transformPointCloud(robots[id_].keyframe_cloud_array[pose_6d_tmp.intensity],
+			&pose_6d_tmp);
+	}
+
+	// downsample visualized points
+	pcl::VoxelGrid<PointPose3D> downsample_filter_for_global_map; // for global map visualization
+	downsample_filter_for_global_map.setLeafSize(map_leaf_size_, map_leaf_size_, map_leaf_size_);
+	downsample_filter_for_global_map.setInputCloud(global_map_keyframes);
+	downsample_filter_for_global_map.filter(*global_map_keyframes_ds);
+
+	// publish global map
+	sensor_msgs::PointCloud2 global_map_msg;
+	pcl::toROSMsg(*global_map_keyframes_ds, global_map_msg);
+	global_map_msg.header.stamp = robots[id_].time_cloud_input_stamp;
+	global_map_msg.header.frame_id = world_frame_;
+	
+	return global_map_msg;
+}
