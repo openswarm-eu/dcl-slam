@@ -386,9 +386,6 @@ void distributedMapping::performDistributedMapping(
 		auto new_factor = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor);
 		robot_local_map.addTransform(*new_factor, covariance);
 
-		// add gps value
-		if (addGPSFactorflag == true)
-			addGPSFactor(gpsQueue, poses_num, current_symbol);
 
 		LOG(INFO) << "createOdom:[" << id_ << "]" << "[" << poses_num - 1 << "-" << poses_num << "]--["
 			<< pose_from.translation().x() << " " << pose_from.translation().y() << " " << pose_from.translation().z()
@@ -397,10 +394,23 @@ void distributedMapping::performDistributedMapping(
 			<< new_pose_to.rotation().roll() << " " << new_pose_to.rotation().pitch() << " " << new_pose_to.rotation().yaw() << "]." << endl;
 	}
 
+	// add gps value
+	if (addGPSFactorflag == true)
+		addGPSFactor(gpsQueue, poses_num, current_symbol);
+
 	// optimizing
 	isam2_graph.print("GTSAM Graph:\n");
 	isam2->update(isam2_graph, isam2_initial_values);
-	isam2->update(); 	// add for gps factor
+
+	if (intra_robot_loop_close_flag == true)
+	{
+		isam2->update();
+		isam2->update();
+		isam2->update();
+		isam2->update();
+		isam2->update();
+	}
+
 	isam2_graph.resize(0);
 	isam2_initial_values.clear();
 	isam2_current_estimates = isam2->calculateEstimate();
@@ -440,6 +450,7 @@ bool distributedMapping::saveFrame(
 {
 	if(keyposes_cloud_3d->empty())
 	{
+		lastSaveSecs = ros::Time::now().toSec();
 		return true;
 	}
 
@@ -452,6 +463,21 @@ bool distributedMapping::saveFrame(
 	float roll = pose_increment.rotation().roll();
 	float pitch = pose_increment.rotation().pitch();
 	float yaw = pose_increment.rotation().yaw();
+
+	static bool saveLastPCD = true;
+	static bool waitSaveLastPCD = true;
+
+	if (saveLastPCD == true)
+	{
+		if (((float)(ros::Time::now().toSec() - lastSaveSecs) > 5.0) && waitSaveLastPCD == true)
+		{
+			// std::cout << "Time" << std::endl;
+			lastSaveSecs = ros::Time::now().toSec();
+			waitSaveLastPCD = false;
+			return true;
+		}
+	}
+
 
 	// select keyframe
 	if(abs(roll) < keyframe_angle_threshold_ && abs(pitch) < keyframe_angle_threshold_ && 
@@ -1402,24 +1428,22 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 		ROS_WARN("gpsFixTopic is empty");
 		return;
 	}
-	
+
 	// wait for system initialized and settles down
-	if (poses_num == 0)
+	if (keyposes_cloud_3d->points.empty())
 	{
 		ROS_WARN("cloudKeyPoses3D wait for system initialized and settles down");
 		return;
 	}            
 	else
 	{   
-		static PointPose3D pose_front_3d = keyposes_cloud_3d->front();
-		static PointPose3D pose_back_3d = keyposes_cloud_3d->back();
 		static bool initial_cloudkeyUpdate = false; // force initial update
 		if(!initial_cloudkeyUpdate)
 		{
 			initial_cloudkeyUpdate =true;
 			ROS_WARN("GPS initialized.");
 		}
-		else if(pointDistance(pose_front_3d, pose_back_3d) < gpsUpatedDistFix)
+		else if(pointDistance(keyposes_cloud_3d->front(), keyposes_cloud_3d->back()) < gpsUpatedDistFix)
 		{
 			return;
 		}
@@ -1470,11 +1494,11 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 			// 	noise_z = 0.01;
 			// }
 
-			// // GPS not properly initialized (0,0,0)
-			// if (abs(gps_x) < 1e-6 && abs(gps_y) < 1e-6){
-			// 	ROS_WARN("GPS not properly initialized! Current GPS value (%.2f, %.2f,%.2f)",gps_x,gps_y,gps_z);
-			// 	continue;
-			// }
+			// GPS not properly initialized (0,0,0)
+			if (abs(gps_x) < 1e-6 && abs(gps_y) < 1e-6){
+				ROS_WARN("GPS not properly initialized! Current GPS value (%.2f, %.2f,%.2f)",gps_x,gps_y,gps_z);
+				continue;
+			}
 
 			// Add GPS every a few meters
 			PointPose3D curGPSPoint;
@@ -1503,6 +1527,7 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 			local_pose_graph_no_filtering->add(gps_factor);
 			isam2_graph.add(gps_factor);
 
+			intra_robot_loop_close_flag = true;
 			// aLoopIsClosed = true;
 			break;
 		}

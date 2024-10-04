@@ -178,6 +178,9 @@ class paramsServer
 		float poseCovThreshold;
 		float gpsUpatedDistFix;
 
+		// Save key frames
+		double lastSaveSecs;
+
 		// visualization
 		float global_map_visualization_radius_; // radius of radius search based intra-robot loop closure
 
