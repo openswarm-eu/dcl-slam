@@ -325,7 +325,8 @@ void distributedMapping::performDistributedMapping(
 	const Pose3& pose_to,
 	const pcl::PointCloud<PointPose3D>::Ptr frame_to,
 	const ros::Time& timestamp,
-	const std::deque<nav_msgs::Odometry> gpsQueue)
+	const std::deque<nav_msgs::Odometry> gpsQueue,
+	const bool isGPSFix)
 {
 	// save keyframe cloud
 	pcl::copyPointCloud(*frame_to, *robots[id_].keyframe_cloud);
@@ -395,7 +396,7 @@ void distributedMapping::performDistributedMapping(
 	}
 
 	// add gps value
-	if (addGPSFactorflag == true)
+	if (addGPSFactorflag == true && isGPSFix == true)
 		addGPSFactor(gpsQueue, poses_num, current_symbol);
 
 	// optimizing

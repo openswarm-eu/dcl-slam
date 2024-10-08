@@ -75,7 +75,8 @@ class distributedMapping : public paramsServer
 			const Pose3& pose_to,
 			const pcl::PointCloud<PointPose3D>::Ptr frame_to,
 			const ros::Time& timestamp,
-			const std::deque<nav_msgs::Odometry> gpsQueue);
+			const std::deque<nav_msgs::Odometry> gpsQueue,
+			const bool isGPSFix);
 
 		bool saveFrame(
 			const Pose3& pose_to);
