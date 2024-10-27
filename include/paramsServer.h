@@ -177,6 +177,7 @@ class paramsServer
 		float gpsCovThreshold;
 		float poseCovThreshold;
 		float gpsUpatedDistFix;
+		Eigen::MatrixXd poseCovariance;
 
 		// Save key frames
 		double lastSaveSecs;

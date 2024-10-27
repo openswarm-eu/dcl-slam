@@ -179,7 +179,8 @@ class distributedMapping : public paramsServer
 		void addGPSFactor(
 			const deque<nav_msgs::Odometry> gpsQueue,
 			int poses_num,
-			Symbol current_symbol);
+			Symbol current_symbol,
+			Pose3 pose_to);
 
 		float pointDistance(PointPose3D p);
 

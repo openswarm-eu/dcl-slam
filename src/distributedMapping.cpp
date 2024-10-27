@@ -396,8 +396,15 @@ void distributedMapping::performDistributedMapping(
 	}
 
 	// add gps value
-	if (addGPSFactorflag == true && isGPSFix == true)
-		addGPSFactor(gpsQueue, poses_num, current_symbol);
+	try
+	{
+		if (addGPSFactorflag == true && isGPSFix == true)
+			addGPSFactor(gpsQueue, poses_num, current_symbol, pose_to);
+	}
+	catch (std::bad_alloc & exception)
+	{
+		LOG(ERROR) << exception.what() << "-> Bad Memory Allocation: Is GPS Fix or GPS Status been published? \n";
+	}
 
 	// optimizing
 	isam2_graph.print("GTSAM Graph:\n");
@@ -435,6 +442,11 @@ void distributedMapping::performDistributedMapping(
 	pose_6d.yaw = isam2_keypose_estimate.rotation().yaw();
 	pose_6d.time = robots[id_].time_cloud_input; // keyframe timestamp
 	keyposes_cloud_6d->push_back(pose_6d);
+
+	// cout << "****************************************************" << endl;
+	// cout << "Pose covariance:" << endl;
+	// cout << isam2->marginalCovariance(current_symbol) << endl;
+	poseCovariance = isam2->marginalCovariance(current_symbol);
 
 	LOG(INFO) << "save:[" << id_ << "]--[" << poses_num << "]--" << isam2_keypose_estimate.translation().x()
 		<< " " << isam2_keypose_estimate.translation().y() << " " << isam2_keypose_estimate.translation().z()
@@ -625,7 +637,8 @@ void distributedMapping::publishTransformation(
 	const ros::Time& timestamp)
 {
 	static tf::TransformBroadcaster world_to_odom_tf_broadcaster;
-	static Symbol first_key((id_+'a'), 0);
+	// static Symbol first_key((id_+'a'), 0);
+	static Symbol first_key((id_+'a'), initial_values->size()-1);
 
 	Pose3 first_pose = initial_values->at<Pose3>(first_key);
 	Pose3 old_first_pose = robots[id_].piror_odom;
@@ -1420,7 +1433,7 @@ void distributedMapping::run(
 	}
 }
 
-void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, int poses_num, Symbol current_symbol)
+void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, int poses_num, Symbol current_symbol, Pose3 pose_to)
 {
 
 	
@@ -1452,7 +1465,10 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 
 	// // pose covariance small, no need to correct
 	// if (poseCovariance(3,3) < poseCovThreshold && poseCovariance(4,4) < poseCovThreshold)
+	// {
+	// 	ROS_WARN("Pose covariance small.");
 	// 	return;
+	// }
 
 	// last gps position
 	static PointPose3D lastGPSPoint;
@@ -1489,11 +1505,11 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 			float gps_x = thisGPS.pose.pose.position.x;
 			float gps_y = thisGPS.pose.pose.position.y;
 			float gps_z = thisGPS.pose.pose.position.z;
-			// if (!useGpsElevation)
-			// {
-			// 	gps_z = transformTobeMapped[5];
-			// 	noise_z = 0.01;
-			// }
+			if (!useGpsElevation)
+			{
+				gps_z = pose_to.translation().z();
+				noise_z = 0.01;
+			}
 
 			// GPS not properly initialized (0,0,0)
 			if (abs(gps_x) < 1e-6 && abs(gps_y) < 1e-6){
