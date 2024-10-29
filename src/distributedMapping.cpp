@@ -443,9 +443,9 @@ void distributedMapping::performDistributedMapping(
 	pose_6d.time = robots[id_].time_cloud_input; // keyframe timestamp
 	keyposes_cloud_6d->push_back(pose_6d);
 
-	// cout << "****************************************************" << endl;
-	// cout << "Pose covariance:" << endl;
-	// cout << isam2->marginalCovariance(current_symbol) << endl;
+	cout << "****************************************************" << endl;
+	cout << "Pose covariance:" << endl;
+	cout << isam2->marginalCovariance(current_symbol) << endl;
 	poseCovariance = isam2->marginalCovariance(current_symbol);
 
 	LOG(INFO) << "save:[" << id_ << "]--[" << poses_num << "]--" << isam2_keypose_estimate.translation().x()
@@ -636,9 +636,9 @@ void distributedMapping::publishPath()
 void distributedMapping::publishTransformation(
 	const ros::Time& timestamp)
 {
+
 	static tf::TransformBroadcaster world_to_odom_tf_broadcaster;
-	// static Symbol first_key((id_+'a'), 0);
-	static Symbol first_key((id_+'a'), initial_values->size()-1);
+	static Symbol first_key((id_+'a'), 0);
 
 	Pose3 first_pose = initial_values->at<Pose3>(first_key);
 	Pose3 old_first_pose = robots[id_].piror_odom;
@@ -1463,12 +1463,12 @@ void distributedMapping::addGPSFactor(std::deque<nav_msgs::Odometry> gpsQueue, i
 		}
 	}
 
-	// // pose covariance small, no need to correct
-	// if (poseCovariance(3,3) < poseCovThreshold && poseCovariance(4,4) < poseCovThreshold)
-	// {
-	// 	ROS_WARN("Pose covariance small.");
-	// 	return;
-	// }
+	// pose covariance small, no need to correct
+	if (poseCovariance(3,3) < poseCovThreshold && poseCovariance(4,4) < poseCovThreshold)
+	{
+		ROS_WARN("Pose covariance small.");
+		return;
+	}
 
 	// last gps position
 	static PointPose3D lastGPSPoint;
