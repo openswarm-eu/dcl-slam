@@ -14,7 +14,7 @@ distributedMapping::distributedMapping() : paramsServer()
 	/*** robot team ***/
 	singleRobot robot; // each robot
 	ROS_INFO("Number of Robots:  %i", number_of_robots_);
-	// cout << "Number of Robots: " << number_of_robots_ << endl;
+
 	for(int it = 0; it < number_of_robots_; it++)
 	{
 		/*** robot information ***/
