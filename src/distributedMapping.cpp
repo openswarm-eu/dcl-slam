@@ -343,7 +343,7 @@ void distributedMapping::performDistributedMapping(
 	if(poses_num == 0)
 	{
 		// save piror value
-		robots[id_].piror_odom = pose_to;
+		// robots[id_].piror_odom = pose_to;
 
 		// add piror factor to graph
 		auto prior_factor = PriorFactor<Pose3>(current_symbol, pose_to, prior_noise);
@@ -452,6 +452,12 @@ void distributedMapping::performDistributedMapping(
 		<< " " << isam2_keypose_estimate.translation().y() << " " << isam2_keypose_estimate.translation().z()
 		<< " " << isam2_keypose_estimate.rotation().roll() << " " << isam2_keypose_estimate.rotation().pitch()
 		<< " " << isam2_keypose_estimate.rotation().yaw() << "." << endl;
+
+
+	gtsam::Pose3 pose_init = Pose3(
+		Rot3::RzRyRx(pose_6d.roll, pose_6d.pitch, pose_6d.yaw),
+		Point3(pose_3d.x, pose_3d.y, pose_3d.z));
+	robots[id_].piror_odom = pose_init;
 
 	// save path for visualization
 	updateLocalPath(pose_6d);
@@ -636,12 +642,18 @@ void distributedMapping::publishPath()
 void distributedMapping::publishTransformation(
 	const ros::Time& timestamp)
 {
+	if (initial_values->size() < 2)
+	{
+		return;
+	}
 
 	static tf::TransformBroadcaster world_to_odom_tf_broadcaster;
-	static Symbol first_key((id_+'a'), 0);
+	static Symbol old_first_key((id_+'a'), 0);
+	static Symbol first_key((id_+'a'), 1);
 
+	Pose3 old_first_pose = initial_values->at<Pose3>(old_first_key);
 	Pose3 first_pose = initial_values->at<Pose3>(first_key);
-	Pose3 old_first_pose = robots[id_].piror_odom;
+	// Pose3 old_first_pose = robots[id_].piror_odom;
 	Pose3 pose_between = first_pose * old_first_pose.inverse();
 
 	tf::Transform world_to_odom = tf::Transform(tf::createQuaternionFromRPY(
