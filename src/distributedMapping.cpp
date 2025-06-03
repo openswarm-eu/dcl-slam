@@ -410,14 +410,14 @@ void distributedMapping::performDistributedMapping(
 	isam2_graph.print("GTSAM Graph:\n");
 	isam2->update(isam2_graph, isam2_initial_values);
 
-	if (intra_robot_loop_close_flag == true)
-	{
-		isam2->update();
-		isam2->update();
-		isam2->update();
-		isam2->update();
-		isam2->update();
-	}
+	// if (intra_robot_loop_close_flag == true)
+	// {
+	// 	isam2->update();
+	// 	isam2->update();
+	// 	isam2->update();
+	// 	isam2->update();
+	// 	isam2->update();
+	// }
 
 	isam2_graph.resize(0);
 	isam2_initial_values.clear();
@@ -640,9 +640,28 @@ void distributedMapping::publishTransformation(
 	static tf::TransformBroadcaster world_to_odom_tf_broadcaster;
 	static Symbol first_key((id_+'a'), 0);
 
+	static bool initial_publish_transformation = false; // force initial update
+	if(!initial_publish_transformation)
+	{
+		// LOG(INFO) << "Publish transformation:[" << id_ << "]." << endl;
+		Symbol tf_key((id_+'a'), 0);
+		first_pose_tf = initial_values->at<Pose3>(tf_key);
+		initial_publish_transformation = true;
+	}
+	else
+	{
+		try {
+			// LOG(INFO) << "Update transformation:[" << id_ << "]." << endl;
+			Symbol tf_key((id_ + 'a'), 1);
+			first_pose_tf = isam2_current_estimates.at<Pose3>(tf_key);
+		} catch (const std::exception& e) {
+		}
+	}
+
 	Pose3 first_pose = initial_values->at<Pose3>(first_key);
 	Pose3 old_first_pose = robots[id_].piror_odom;
-	Pose3 pose_between = first_pose * old_first_pose.inverse();
+	// Pose3 pose_between = first_pose * old_first_pose.inverse();
+	Pose3 pose_between = old_first_pose * first_pose_tf.inverse();
 
 	tf::Transform world_to_odom = tf::Transform(tf::createQuaternionFromRPY(
 		pose_between.rotation().roll(), pose_between.rotation().pitch(), pose_between.rotation().yaw()),

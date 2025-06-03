@@ -350,6 +350,9 @@ class distributedMapping : public paramsServer
 
 		set<pair<Key, Key>> accepted_keys, rejected_keys; // accepted and rejected pairs
 		int measurements_accepted_num, measurements_rejected_num;
+
+		Symbol tf_key;
+		Pose3 first_pose_tf;
 };
 
 #endif
