@@ -91,3 +91,10 @@ This work is published in IEEE Sensors Journal 2023, and please cite related pap
   - DCL-SLAM is based on a two-stage distributed Gauss-Seidel approach (Siddharth Choudhary and Luca Carlone and Carlos Nieto and John Rogers and Henrik I. Christensen and Frank Dellaert. Distributed Trajectory Estimation with Privacy and Communication Constraints: a Two-Stage Distributed Gauss-Seidel Approach).
 
   - DCL-SLAM is based on outlier rejection of [DOOR-SLAM](https://github.com/lajoiepy/robust_distributed_mapper) (Lajoie, Pierre-Yves and Ramtoula, Benjamin and Chang, Yun and Carlone, Luca and Beltrame, Giovanni. DOOR-SLAM: Distributed, Online, and Outlier Resilient SLAM for Robotic Teams).
+
+
+# Acknowledgement
+
+Part of the source code in this repository is developed within the frame and for the purpose of the OpenSwarm project. This project has received funding from the European Unioan's Horizon Europe Framework Programme under Grant Agreement No. 101093046.
+
+![OpenSwarm - Funded by the European Union](logos/ack.png)
